@@ -34,7 +34,7 @@ public class LuceneTester {
         try{
             tester = new LuceneTester();
             tester.createIndex();
-            tester.searcher(tokenizeStopStem("faith and science"));
+            tester.searcher(tokenizeStem("faith and science"));
 
         } catch (IOException e){
             e.printStackTrace();
@@ -111,6 +111,33 @@ public class LuceneTester {
         System.out.println(sb.toString());
         return sb.toString();
     }
+
+
+
+    private static String tokenizeStem(String input) {
+
+        TokenStream tokenStream = new StandardTokenizer(
+                Version.LUCENE_36, new StringReader(input));
+        tokenStream = new PorterStemFilter(tokenStream);
+
+        StringBuilder sb = new StringBuilder();
+        OffsetAttribute offsetAttribute = tokenStream.addAttribute(OffsetAttribute.class);
+        CharTermAttribute charTermAttr = tokenStream.getAttribute(CharTermAttribute.class);
+
+        try{
+
+            while (tokenStream.incrementToken()) {
+
+                sb.append(charTermAttr.toString() + " ");
+            }
+        }
+        catch (IOException e){
+            System.out.println(e.getMessage());
+        }
+        System.out.println(sb.toString());
+        return sb.toString();
+    }
+
 
 
 
