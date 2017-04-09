@@ -3,12 +3,20 @@
  */
 
 import java.io.IOException;
+import java.io.StringReader;
 
+import org.apache.lucene.analysis.Analyzer;
+import org.apache.lucene.analysis.StopAnalyzer;
+import org.apache.lucene.analysis.TokenStream;
+import org.apache.lucene.analysis.tokenattributes.TermAttribute;
 import org.apache.lucene.document.Document;
 import org.apache.lucene.queryParser.ParseException;
 import org.apache.lucene.search.ScoreDoc;
 import org.apache.lucene.search.TopDocs;
+import org.apache.lucene.util.Version;
 
+
+//This class is used to test the indexing and search capability of the Lucene library
 public class LuceneTester {
 
     String indexDir = "D:\\lucene\\index";
@@ -23,7 +31,8 @@ public class LuceneTester {
         try{
             tester = new LuceneTester();
             tester.createIndex();
-            tester.searcher("Mohan");
+            tester.searcher(displayTokenUsingStopAnalyzer("faith and science"));
+
         } catch (IOException e){
             e.printStackTrace();
         } catch (ParseException e){
@@ -58,6 +67,20 @@ public class LuceneTester {
         searcher.close();
 
 
+    }
+
+    //StopWords
+    private static String displayTokenUsingStopAnalyzer (String textSW) throws IOException {
+        Analyzer analyzer = new StopAnalyzer(Version.LUCENE_36);
+        TokenStream tokenStream = analyzer.tokenStream(LuceneConstants.CONTENTS,new StringReader(textSW));
+        TermAttribute term = tokenStream.addAttribute(TermAttribute.class);
+        String result ="";
+        while(tokenStream.incrementToken()){
+            result = result + ""+term.term()+" ";
+
+        }
+        System.out.println(result);
+        return result;
     }
 
 
