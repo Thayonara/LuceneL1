@@ -5,15 +5,18 @@
 import java.io.IOException;
 import java.io.StringReader;
 
-import org.apache.lucene.analysis.Analyzer;
-import org.apache.lucene.analysis.StopAnalyzer;
-import org.apache.lucene.analysis.TokenStream;
+import org.apache.lucene.analysis.*;
+import org.apache.lucene.analysis.standard.StandardTokenizer;
+import org.apache.lucene.analysis.tokenattributes.CharTermAttribute;
+import org.apache.lucene.analysis.tokenattributes.OffsetAttribute;
 import org.apache.lucene.analysis.tokenattributes.TermAttribute;
 import org.apache.lucene.document.Document;
 import org.apache.lucene.queryParser.ParseException;
 import org.apache.lucene.search.ScoreDoc;
 import org.apache.lucene.search.TopDocs;
 import org.apache.lucene.util.Version;
+
+import static org.apache.lucene.analysis.StopAnalyzer.ENGLISH_STOP_WORDS_SET;
 
 
 //This class is used to test the indexing and search capability of the Lucene library
@@ -31,7 +34,7 @@ public class LuceneTester {
         try{
             tester = new LuceneTester();
             tester.createIndex();
-            tester.searcher(displayTokenUsingStopAnalyzer("faith and science"));
+            tester.searcher(tokenizeStopStem("faith and science"));
 
         } catch (IOException e){
             e.printStackTrace();
@@ -81,6 +84,32 @@ public class LuceneTester {
         }
         System.out.println(result);
         return result;
+    }
+
+
+    private static String tokenizeStopStem(String input) {
+
+        TokenStream tokenStream = new StandardTokenizer(
+                Version.LUCENE_36, new StringReader(input));
+        tokenStream = new StopFilter(Version.LUCENE_36, tokenStream, ENGLISH_STOP_WORDS_SET);
+        tokenStream = new PorterStemFilter(tokenStream);
+
+        StringBuilder sb = new StringBuilder();
+        OffsetAttribute offsetAttribute = tokenStream.addAttribute(OffsetAttribute.class);
+        CharTermAttribute charTermAttr = tokenStream.getAttribute(CharTermAttribute.class);
+
+        try{
+
+            while (tokenStream.incrementToken()) {
+
+                sb.append(charTermAttr.toString() + " ");
+            }
+        }
+        catch (IOException e){
+            System.out.println(e.getMessage());
+        }
+        System.out.println(sb.toString());
+        return sb.toString();
     }
 
 
