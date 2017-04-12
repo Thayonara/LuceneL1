@@ -28,33 +28,18 @@ public class LuceneTester {
     Searcher searcher;
 
 
-    public static void main(String[] args){
-        LuceneTester tester;
-
-        try{
-            tester = new LuceneTester();
-            tester.createIndex();
-            tester.searcher(tokenizeStem("faith and science"));
-
-        } catch (IOException e){
-            e.printStackTrace();
-        } catch (ParseException e){
-            e.printStackTrace();
-        }
-    }
-
-    private void createIndex() throws IOException{
+    public void createIndex(String base) throws IOException{
         indexer = new Indexer(indexDir);
         int numIndexed;
         long startTime = System.currentTimeMillis();
-        numIndexed = indexer.createIndex(dataDir, new TextFileFilter());
+        numIndexed = indexer.createIndex(dataDir, new TextFileFilter(),base);
         long endTime = System.currentTimeMillis();
         indexer.close();
         System.out.println(numIndexed+ " File indexed, time taken: " + (endTime-startTime)+ " ms");
 
     }
-
-    private void searcher(String searchQuery) throws IOException, ParseException{
+//without stopword and stemming
+    public void searcher(String searchQuery) throws IOException, ParseException{
         searcher = new Searcher(indexDir);
         long startTime = System.currentTimeMillis();
         TopDocs hits = searcher.search(searchQuery);
@@ -73,7 +58,7 @@ public class LuceneTester {
     }
 
     //StopWords
-    private static String displayTokenUsingStopAnalyzer (String textSW) throws IOException {
+    public static String displayTokenUsingStopAnalyzer (String textSW) throws IOException {
         Analyzer analyzer = new StopAnalyzer(Version.LUCENE_36);
         TokenStream tokenStream = analyzer.tokenStream(LuceneConstants.CONTENTS,new StringReader(textSW));
         TermAttribute term = tokenStream.addAttribute(TermAttribute.class);
@@ -86,8 +71,8 @@ public class LuceneTester {
         return result;
     }
 
-
-    private static String tokenizeStopStem(String input) {
+    //with stopword and stemming
+    protected static String tokenizeStopStem(String input) {
 
         TokenStream tokenStream = new StandardTokenizer(
                 Version.LUCENE_36, new StringReader(input));
@@ -113,8 +98,34 @@ public class LuceneTester {
     }
 
 
+    //with stopword and stemming
+    public static String tokenizeStop(String input) {
 
-    private static String tokenizeStem(String input) {
+        TokenStream tokenStream = new StandardTokenizer(
+                Version.LUCENE_36, new StringReader(input));
+        tokenStream = new StopFilter(Version.LUCENE_36, tokenStream, ENGLISH_STOP_WORDS_SET);
+
+        StringBuilder sb = new StringBuilder();
+        OffsetAttribute offsetAttribute = tokenStream.addAttribute(OffsetAttribute.class);
+        CharTermAttribute charTermAttr = tokenStream.getAttribute(CharTermAttribute.class);
+
+        try{
+
+            while (tokenStream.incrementToken()) {
+
+                sb.append(charTermAttr.toString() + " ");
+            }
+        }
+        catch (IOException e){
+            System.out.println(e.getMessage());
+        }
+        System.out.println(sb.toString());
+        return sb.toString();
+    }
+
+
+    //with stemming
+    public static String tokenizeStem(String input) {
 
         TokenStream tokenStream = new StandardTokenizer(
                 Version.LUCENE_36, new StringReader(input));
